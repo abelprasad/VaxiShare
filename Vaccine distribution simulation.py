@@ -36,14 +36,14 @@ class ResourceManager:
         
         self.safety_enabled = enabled
         status = "ENABLED" if enabled else "DISABLED"
-        self.push_update("LOG", f"⚠️ [TAMPER] Safety Protocol {status}!")
+        self.push_update("LOG", f"[TAMPER] Safety Protocol {status}!")
 
     def trigger_supply_crash(self):
        
         with self.lock:
             for r in self.available:
                 self.available[r] = int(self.available[r] * 0.5)
-            self.push_update("LOG", "💥 [TAMPER] SUPPLY CHAIN COLLAPSE! Inventory halved.")
+            self.push_update("LOG", " [TAMPER] SUPPLY CHAIN COLLAPSE! Inventory halved.")
             self.push_update("GLOBAL", self.available)
 
     def trigger_demand_surge(self):
@@ -69,31 +69,31 @@ class ResourceManager:
            
             for r in request:
                 if request[r] > self.available[r]:
-                    self.push_update("LOG", f"⏳ [WAIT] {name} waiting for physical items.")
+                    self.push_update("LOG", f" [WAIT] {name} waiting for physical items.")
                     self.push_update("STATUS", "Waiting for Stock", name)
                     return False
 
             
             if not self.safety_enabled:
                 self._provisional_allocate(name, request)
-                self.push_update("LOG", f"⚠️ [RISK] {name} granted (Safety OFF).")
+                self.push_update("LOG", f"[RISK] {name} granted (Safety OFF).")
                 self.push_update("GLOBAL", self.available)
                 self.push_update("HOSPITAL_UPDATE", self.allocated[name], name)
                 self.push_update("STATUS", "Allocated (Risky)", name)
                 return True
 
-            # 3. BANKER'S ALGORITHM (Standard Safety Check)
+        
             self._provisional_allocate(name, request)
             
             if self._is_safe_state():
-                self.push_update("LOG", f"✅ [GRANTED] {name} request approved. Safe State.")
+                self.push_update("LOG", f" [GRANTED] {name} request approved. Safe State.")
                 self.push_update("GLOBAL", self.available)
                 self.push_update("HOSPITAL_UPDATE", self.allocated[name], name)
                 self.push_update("STATUS", "Allocated (Safe)", name)
                 return True
             else:
                 self._provisional_rollback(name, request)
-                self.push_update("LOG", f"🛑 [UNSAFE] {name} DENIED by Banker's Algo.")
+                self.push_update("LOG", f" [UNSAFE] {name} DENIED by Banker's Algo.")
                 self.push_update("STATUS", "Denied (Unsafe State)", name)
                 return False
 
@@ -312,3 +312,4 @@ if __name__ == "__main__":
         h.start()
 
     root.mainloop()
+
